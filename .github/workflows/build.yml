@@ -9,12 +9,15 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4 # Đã sửa v3 thành v4 ở đây
+      uses: actions/checkout@v4
 
     - name: Cài đặt môi trường (Dependencies)
       run: |
         sudo apt-get update
-        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3
+        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python2 python3
+        
+        # Ép hệ thống dùng Python 2 làm mặc định để không bị lỗi file gcc-wrapper.py
+        sudo ln -sf /usr/bin/python2 /usr/bin/python
 
     - name: Tải Trình biên dịch (Proton Clang)
       run: |
@@ -38,7 +41,7 @@ jobs:
         make O=out mrproper
         
         # Nạp cấu hình cho chip Kona (Snapdragon 865)
-        make O=out vendor/kona-perf_defconfig
+        make O=out vendor/nethunter_defconfig
 
         # Tiến hành build ra file Image
         make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image
@@ -61,7 +64,7 @@ jobs:
         zip -r9 ../Nethunter-Kernel-crDroid-OP8T.zip * -x .git README.md *placeholder
 
     - name: Upload File ZIP lên Github
-      uses: actions/upload-artifact@v4 # Đã sửa v3 thành v4 ở đây
+      uses: actions/upload-artifact@v4
       with:
         name: Nethunter-Kernel-crDroid-OP8T
         path: Nethunter-Kernel-crDroid-OP8T.zip
