@@ -9,7 +9,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4 # Đã sửa v3 thành v4 ở đây
 
     - name: Cài đặt môi trường (Dependencies)
       run: |
@@ -61,8 +61,7 @@ jobs:
         zip -r9 ../Nethunter-Kernel-crDroid-OP8T.zip * -x .git README.md *placeholder
 
     - name: Upload File ZIP lên Github
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4 # Đã sửa v3 thành v4 ở đây
       with:
         name: Nethunter-Kernel-crDroid-OP8T
         path: Nethunter-Kernel-crDroid-OP8T.zip
-        
