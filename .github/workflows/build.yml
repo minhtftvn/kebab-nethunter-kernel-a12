@@ -1,0 +1,68 @@
+name: Build crDroid Nethunter Kernel OP8T
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Cài đặt môi trường (Dependencies)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3
+
+    - name: Tải Trình biên dịch (Proton Clang)
+      run: |
+        git clone --depth=1 https://github.com/kdrag0n/proton-clang.git clang
+
+    - name: Tải Source Kernel crDroid Nethunter
+      run: |
+        git clone --depth=1 https://github.com/flypatriot/crdroid_12_kernel.git -b 12.1-nethunter kernel-source
+
+    - name: Tiến hành Build Kernel
+      run: |
+        cd kernel-source
+        export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+        export CC=clang
+
+        make O=out clean
+        make O=out mrproper
+        
+        # Nạp cấu hình cho chip Kona (Snapdragon 865)
+        make O=out vendor/kona-perf_defconfig
+
+        # Tiến hành build ra file Image
+        make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image
+
+    - name: Đóng gói với AnyKernel3
+      run: |
+        git clone https://github.com/osm0sis/AnyKernel3.git
+        cd AnyKernel3
+        
+        # Tùy chỉnh Anykernel3 cho OnePlus 8T
+        sed -i 's/kernel.string=.*/kernel.string=crDroid Nethunter OP8T by Tao/g' anykernel.sh
+        sed -i 's/device.name1=.*/device.name1=kebab/g' anykernel.sh
+        sed -i 's/device.name2=.*/device.name2=OnePlus8T/g' anykernel.sh
+        sed -i 's/supported.versions=.*/supported.versions=12,12.1/g' anykernel.sh
+
+        # Lấy file Image ghép vào AnyKernel3
+        cp ../kernel-source/out/arch/arm64/boot/Image ./
+
+        # Ép ra file ZIP
+        zip -r9 ../Nethunter-Kernel-crDroid-OP8T.zip * -x .git README.md *placeholder
+
+    - name: Upload File ZIP lên Github
+      uses: actions/upload-artifact@v3
+      with:
+        name: Nethunter-Kernel-crDroid-OP8T
+        path: Nethunter-Kernel-crDroid-OP8T.zip
+        
