@@ -39,8 +39,8 @@ jobs:
         make $MAKE_ARGS clean
         make $MAKE_ARGS mrproper
         
-        # Nạp cấu hình Nethunter của mày
-        make $MAKE_ARGS vendor/nethunter_defconfig
+        # Nạp cấu hình Nethunter chuẩn theo ảnh mày tìm được
+        make $MAKE_ARGS nethunter_defconfig
 
         # Tiến hành compile
         make -j$(nproc --all) $MAKE_ARGS Image
