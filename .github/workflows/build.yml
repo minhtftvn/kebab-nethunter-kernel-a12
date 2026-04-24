@@ -1,4 +1,4 @@
-name: Build crDroid Nethunter Kernel OP8T (Final)
+name: Build crDroid Nethunter Kernel OP8T (V2)
 
 on:
   workflow_dispatch:
@@ -32,15 +32,11 @@ jobs:
         cd kernel-source
         export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
 
-        # Biến môi trường chuẩn cho Clang
         MAKE_ARGS="O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1"
 
-        # Dọn rác và nạp cấu hình
         make $MAKE_ARGS clean
         make $MAKE_ARGS mrproper
         make $MAKE_ARGS nethunter_defconfig
-        
-        # Build file Image
         make -j$(nproc --all) $MAKE_ARGS Image
 
     - name: Đóng gói siêu mượt với AnyKernel3
@@ -48,25 +44,21 @@ jobs:
         git clone https://github.com/osm0sis/AnyKernel3.git
         cd AnyKernel3
         
-        # Xóa các file rác không cần thiết của AK3
+        # Xóa rác
         rm -rf patch/ modules/ ramdisk/
         
-        # Cấu hình chuẩn đét cho OnePlus 8T (Bỏ qua check tên, bật A/B slot)
-        sed -i 's/kernel.string=.*/kernel.string=crDroid Nethunter OP8T by Tao/g' anykernel.sh
-        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' anykernel.sh
-        sed -i 's/is_slot_device=0/is_slot_device=1/g' anykernel.sh
-        
-        # Fix chí mạng đường dẫn boot (Sửa lỗi ERROR 1 trên TWRP)
-        sed -i 's|block=.*|block=/dev/block/bootdevice/by-name/boot;|g' anykernel.sh
+        # CHỐT HẠ: Đổi tên thành V2 và ép block=auto
+        sed -i 's/^kernel.string=.*/kernel.string=crDroid Nethunter OP8T V2/g' anykernel.sh
+        sed -i 's/^do.devicecheck=.*/do.devicecheck=0/g' anykernel.sh
+        sed -i 's/^is_slot_device=.*/is_slot_device=1/g' anykernel.sh
+        sed -i 's|^block=.*|block=auto;|g' anykernel.sh
 
-        # Lấy file Image vừa build ghép vào
         cp ../kernel-source/out/arch/arm64/boot/Image ./
-
-        # Nén lại thành ZIP
-        zip -r9 ../Nethunter-Kernel-crDroid-OP8T.zip * -x .git README.md *placeholder
+        zip -r9 ../Nethunter-Kernel-crDroid-OP8T-V2.zip * -x .git README.md *placeholder
 
     - name: Upload File ZIP lên Github
       uses: actions/upload-artifact@v4
       with:
-        name: Nethunter-Kernel-crDroid-OP8T
-        path: Nethunter-Kernel-crDroid-OP8T.zip
+        name: Nethunter-Kernel-crDroid-OP8T-V2
+        path: Nethunter-Kernel-crDroid-OP8T-V2.zip
+        
